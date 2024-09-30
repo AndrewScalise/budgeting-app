@@ -72,11 +72,15 @@ const formatCurrency = (amount: number) => {
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
+  const date = new Date(dateString);
+  const year = date.getUTCFullYear();
+  const month = date.toLocaleString("en-US", {
     month: "long",
-    day: "numeric",
+    timeZone: "UTC",
   });
+  const day = date.getUTCDate();
+
+  return `${month} ${day}, ${year}`;
 };
 
 export default function BudgetingApp({
@@ -191,8 +195,15 @@ export default function BudgetingApp({
 
   const calculateMonthlyData = useMemo((): MonthlyData => {
     const monthlyData: MonthlyData = {};
+
     transactions.forEach((transaction) => {
-      const monthYear = transaction.date.substring(0, 7); // YYYY-MM
+      const date = new Date(transaction.date);
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth() + 1; // `getUTCMonth()` is zero-based, so add 1
+
+      // Format the month to ensure it is always two digits
+      const monthYear = `${year}-${month < 10 ? "0" : ""}${month}`;
+
       if (!monthlyData[monthYear]) {
         monthlyData[monthYear] = {
           income: 0,
@@ -201,6 +212,7 @@ export default function BudgetingApp({
           transactions: [],
         };
       }
+
       if (transaction.type === "income") {
         monthlyData[monthYear].income += transaction.amount;
       } else {
@@ -210,6 +222,8 @@ export default function BudgetingApp({
         monthlyData[monthYear].income - monthlyData[monthYear].expenses;
       monthlyData[monthYear].transactions.push(transaction);
     });
+    console.log(monthlyData);
+
     return monthlyData;
   }, [transactions]);
 
@@ -487,10 +501,7 @@ export default function BudgetingApp({
                         onClick={() => toggleMonthExpansion(month)}
                       >
                         <h3 className="text-lg font-semibold">
-                          {new Date(month).toLocaleString("default", {
-                            month: "long",
-                            year: "numeric",
-                          })}
+                          {dayjs(month, "YYYY-MM").format("MMMM YYYY")}
                         </h3>
                         <div className="flex items-center space-x-4">
                           <span className="text-green-600">
