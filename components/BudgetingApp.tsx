@@ -35,6 +35,7 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
+import dayjs from "dayjs";
 
 type Transaction = {
   _id: string;
@@ -176,6 +177,18 @@ export default function BudgetingApp({
     setIsEditDialogOpen(true);
   };
 
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Extract value from date input field
+    const dateString = e.target.value;
+
+    // Parse it with new Date or Day.js
+    const dateObject = new Date(dateString); // Be cautious of time zone effects
+    const formattedDate = dayjs(dateObject).format("YYYY-MM-DD");
+
+    // Set date in the proper format
+    setDate(formattedDate);
+  };
+
   const calculateMonthlyData = useMemo((): MonthlyData => {
     const monthlyData: MonthlyData = {};
     transactions.forEach((transaction) => {
@@ -227,15 +240,13 @@ export default function BudgetingApp({
   const monthlyChartData = useMemo(() => {
     return Object.entries(calculateMonthlyData)
       .map(([month, data]) => ({
-        name: new Date(month).toLocaleString("default", {
-          month: "short",
-          year: "numeric",
-        }),
+        name: dayjs(month, "YYYY-MM").format("MMM YYYY"), // Format the month for display
+        date: dayjs(month, "YYYY-MM").toDate(), // Keep the date for sorting
         income: data.income,
         expenses: data.expenses,
         balance: data.balance,
       }))
-      .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
+      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by actual date value
   }, [calculateMonthlyData]);
 
   const toggleMonthExpansion = (month: string) => {
@@ -315,7 +326,7 @@ export default function BudgetingApp({
                   id="date"
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={handleDateChange}
                   required
                 />
               </div>
@@ -615,7 +626,7 @@ export default function BudgetingApp({
                 id="edit-date"
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={handleDateChange}
                 required
               />
             </div>
