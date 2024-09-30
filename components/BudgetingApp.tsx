@@ -222,7 +222,6 @@ export default function BudgetingApp({
         monthlyData[monthYear].income - monthlyData[monthYear].expenses;
       monthlyData[monthYear].transactions.push(transaction);
     });
-    console.log(monthlyData);
 
     return monthlyData;
   }, [transactions]);
